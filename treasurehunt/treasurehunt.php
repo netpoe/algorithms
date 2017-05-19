@@ -14,6 +14,8 @@ class TreasureHunt
 
     public $players = 10;
 
+    public $content;
+
     public function segmentTreasureString(Int $segment = 1)
     {
         $this->cluesPerTreasureSegment = str_split(str_replace(' ', '', $this->treasure), $segment);
@@ -65,11 +67,20 @@ class TreasureHunt
         return $this;
     }
 
-    public function addNumbersToClues()
+    public function setContent()
     {
         $data = file_get_contents($this->file);
         
         $content = json_decode($data, true);
+
+        $this->content = $content;
+
+        return $this;
+    }
+
+    public function addNumbersToClues()
+    {
+        $content = $this->content;
 
         shuffle($content);
 
@@ -119,6 +130,7 @@ $treasureHunt->segmentTreasureString()
             ->createJsonFile()
             ->saveCluesToJsonFile()
             ->waitForFileFill()
+            ->setContent()
             ->sortCluesForNumberOfPlayers()
             ->setFileName('./treasurehunt.csv')
             ->saveToCsv();
