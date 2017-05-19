@@ -12,7 +12,7 @@ class TreasureHunt
 
     public $file = './clues.json';
 
-    public $players = 10;
+    public $players = 3;
 
     public $content;
 
@@ -96,9 +96,7 @@ class TreasureHunt
 
     public function sortCluesForNumberOfPlayers()
     {
-        $sortedClueTokenArray = [];
-
-        for ($i = 0; $i <= $this->players; $i++) {
+        for ($i = 0; $i < $this->players; $i++) {
             $sortedClueTokenArray[] = $this->addNumbersToClues();
         }
 
