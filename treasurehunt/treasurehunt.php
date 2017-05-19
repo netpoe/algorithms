@@ -18,9 +18,11 @@ class TreasureHunt
 
     public $length = 0;
 
-    public function segmentTreasureString(Int $segment = 1)
+    public $segment = 1;
+
+    public function segmentTreasureString()
     {
-        $this->cluesPerTreasureSegment = str_split(str_replace(' ', '', $this->treasure), $segment);
+        $this->cluesPerTreasureSegment = str_split(str_replace(' ', '', $this->treasure), $this->segment);
 
         return $this;
     }
