@@ -12,9 +12,11 @@ class TreasureHunt
 
     public $file = './clues.json';
 
-    public $players = 3;
+    public $players = 10;
 
     public $content;
+
+    public $length = 0;
 
     public function segmentTreasureString(Int $segment = 1)
     {
@@ -31,6 +33,13 @@ class TreasureHunt
                 'token' => $token,
             ];
         }, $this->cluesPerTreasureSegment);
+
+        return $this;
+    }
+
+    public function setLength()
+    {
+        $this->length = count($this->clueTokenArray);
 
         return $this;
     }
@@ -78,26 +87,48 @@ class TreasureHunt
         return $this;
     }
 
-    public function addNumbersToClues()
+    public function numberClues()
     {
         $content = $this->content;
 
-        shuffle($content);
+        $length = $this->length;
 
-        $length = count($content);
-        
-        return array_map(function($clue, $i) use ($length) {
-            $text = $clue['clue'];
-            $arr['clue'] = $i+1 . "/$length. $text";
-            $arr['token'] = $clue['token'];
-            return $arr;
+        $this->content = array_map(function($item, $index) use ($length) {
+            $location = $item['clue'];
+            $clue = $index+1 . "/$length. $location";
+            $token = $item['token'];
+            return [
+                'clue' => $clue,
+                'token' => $token,
+            ];
         }, $content, array_keys($content));
+
+        return $this;
     }
 
     public function sortCluesForNumberOfPlayers()
     {
+        $length = $this->length;
+
+        $startFrom = 0;
+
         for ($i = 0; $i < $this->players; $i++) {
-            $sortedClueTokenArray[] = $this->addNumbersToClues();
+            $player = $i+1;
+            $index = 0;
+            for ($j = $startFrom; $index < $length; $j++) {
+                if ($j == $length) {
+                    $j = 0;
+                }
+                $token = $this->content[$j]['token'];
+                $clue = $this->content[$j]['clue'];
+                $sortedClueTokenArray[$index][] = [
+                    'clue' => $clue,
+                    'token' => $token,
+                    'group' => "Player: {$player}",
+                ];
+                $index++;
+            }
+            $startFrom = $length - $player;
         }
 
         $this->sortedClueTokenArray = $sortedClueTokenArray;
@@ -108,6 +139,11 @@ class TreasureHunt
     public function saveToCsv()
     {
         $fp = fopen($this->file, 'w');
+
+        fputcsv($fp, ["Clues: $this->length"]);
+        foreach ($this->content as $clue) {
+            fputcsv($fp, $clue);
+        }
 
         foreach ($this->sortedClueTokenArray as $i => $group) {
             $index = $i+1;
@@ -124,11 +160,13 @@ class TreasureHunt
 $treasureHunt = new TreasureHunt;
 $treasureHunt->segmentTreasureString()
             ->setCluesPerTreasureSegment()
+            ->setLength()
             ->setFileName('./clues.json')
             ->createJsonFile()
             ->saveCluesToJsonFile()
             ->waitForFileFill()
             ->setContent()
+            ->numberClues()
             ->sortCluesForNumberOfPlayers()
             ->setFileName('./treasurehunt.csv')
             ->saveToCsv();
